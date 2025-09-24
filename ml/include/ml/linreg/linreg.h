@@ -4,7 +4,7 @@
 #pragma once
 #include "ml/lin_reg/interface.h"
 #include <vector>
-#include <algorithm> // for std::min
+#include <algorithm> // for driver::min
 
 
 namespace ml::lin_reg
@@ -23,8 +23,8 @@ public:
      * @param [in] trainInput Reference to a readble vector, (data that is going to be traded).
      * @param [in] tainOutput Reference to a readble vector, (data that is going to be traded).
      */
-    explicit LinReg(const std::vector<double>& trainInput,
-                    const std::vector<double>& trainOutput) noexcept;
+    explicit LinReg(const driver::vector<double>& trainInput,
+                    const driver::vector<double>& trainOutput) noexcept;
 
     /**
      * @brief Delete the constructor as default.
@@ -53,7 +53,7 @@ public:
      * @param [in] epochCount Indicates how many epochs that will be used.
      * @param [in] learingRate Learingrate speed, default is 0.01 or 1%.
      */
-    bool train(const std::size_t epochCount = 1U, double learningRate = 0.01) noexcept;
+    bool train(const driver::size_t epochCount = 1U, double learningRate = 0.01) noexcept;
 
     /**
      * @brief Method to train the module without setting epochcount.
@@ -97,16 +97,16 @@ private:
      */
     void shuffleIndex() noexcept;
 
-    const std::vector<double>& myTrainInput;            // Reference to the training data (input data).
-    const std::vector<double>& myTrainOutput;           // Reference to the training data (output data).
-    std::size_t myTrainSetCount;                        // Indicates the total of full trainingset that are avalible.
+    const driver::vector<double>& myTrainInput;            // Reference to the training data (input data).
+    const driver::vector<double>& myTrainOutput;           // Reference to the training data (output data).
+    driver::size_t myTrainSetCount;                        // Indicates the total of full trainingset that are avalible.
     double myBias;                                      // Bias value for the module, (m) in the ecvation kx + m = y.
     double myWeight;                                    // Weight value for the module, (k) in the ecvation kc + m = y.
-    std::vector<double> myLastPredict;                  // Reference to the last data the modlue has between epochs.
+    driver::vector<double> myLastPredict;                  // Reference to the last data the modlue has between epochs.
     int myEpochsUsed{0};                                // To save the amount of epochs that are used for the specific traingmodule.
-    std::vector<double> myPredVector;                   // Last predict.
-    std::size_t myEpochCount{0};                        // The specified amount of epochs that the module should use.   
-    std::vector<std::size_t> myIndex;                   // Vector that holds the amount of indexes in traingvector to shuffle.
+    driver::vector<double> myPredVector;                   // Last predict.
+    driver::size_t myEpochCount{0};                        // The specified amount of epochs that the module should use.   
+    driver::vector<driver::size_t> myIndex;                   // Vector that holds the amount of indexes in traingvector to shuffle.
 
 };
 } // Namespace ml::lin_reg

@@ -1,37 +1,37 @@
 #include "ml/lin_reg/lin_reg.h"
 #include <vector>
 #include <cmath>
-#include <algorithm> // for std::shuffle
+#include <algorithm> // for driver::shuffle
 #include <random>
 #include <iostream>
 
 namespace ml::lin_reg
 {
 //--------------------------------------------------------------------------------//
-LinReg::LinReg(const std::vector<double>& trainInput,
-               const std::vector<double>& trainOutput) noexcept
+LinReg::LinReg(const driver::vector<double>& trainInput,
+               const driver::vector<double>& trainOutput) noexcept
                 :   myTrainInput{trainInput},
                     myTrainOutput{trainOutput},  
                     myTrainSetCount(static_cast<unsigned>(
-                    std::min(trainInput.size(), trainOutput.size()))),
+                    driver::min(trainInput.size(), trainOutput.size()))),
                     myPredVector(myTrainSetCount)
 {
     // Random generator and uniform.
-    static std::mt19937 gen{std::random_device{}()};
-    std::uniform_real_distribution<double> dist (0.0, 1.0);
+    static driver::mt19937 gen{driver::random_device{}()};
+    driver::uniform_real_distribution<double> dist (0.0, 1.0);
 
     // Assign random values.
     myBias = dist(gen);
     myWeight = dist(gen);
     
     // Print the startvalues.
-    std::cout << "Bias startvalue: " << myBias << "\n";
-    std::cout << "Weight startvalue: " << myWeight << "\n";
+    driver::cout << "Bias startvalue: " << myBias << "\n";
+    driver::cout << "Weight startvalue: " << myWeight << "\n";
 
     myIndex.resize(myTrainSetCount); // Tell vector how many elements it will contain to not allocate vector. 
 
     // Loop to add the indexes in the trainingdata to the vector myIndex.
-    for (std::size_t i{0}; i < myTrainSetCount; i++)
+    for (driver::size_t i{0}; i < myTrainSetCount; i++)
     {
         myIndex[i] = i;
     }
@@ -49,9 +49,9 @@ bool LinReg::trainWithNoEpoch(double learningRate) noexcept
     while (!isPredictDone())
     {
         shuffleIndex();
-        for (std::size_t k{}; k < myTrainSetCount; k++)
+        for (driver::size_t k{}; k < myTrainSetCount; k++)
         {
-            const std::size_t i = myIndex[k];
+            const driver::size_t i = myIndex[k];
             // ypred = kx + m.
             const auto yPred = predict(myTrainInput[i]);
 
@@ -72,19 +72,19 @@ bool LinReg::trainWithNoEpoch(double learningRate) noexcept
     return true;    
 }
 //--------------------------------------------------------------------------------//
-bool LinReg::train(const std::size_t epochCount, double learningRate) noexcept
+bool LinReg::train(const driver::size_t epochCount, double learningRate) noexcept
 {
     if ((0U == epochCount) || (0.0 >= learningRate)) { return false;}
     
     myEpochCount = epochCount;   
 
-    for (std::size_t epoch{}; epoch < epochCount; epoch++)
+    for (driver::size_t epoch{}; epoch < epochCount; epoch++)
     {
         shuffleIndex();
-        for (std::size_t k{}; k < myTrainSetCount; k++)
+        for (driver::size_t k{}; k < myTrainSetCount; k++)
         {
             // Use random index.
-            const std::size_t i = myIndex[k];
+            const driver::size_t i = myIndex[k];
 
             // ypred = kx + m.
             const auto yPred = predict(myTrainInput[i]);
@@ -105,9 +105,9 @@ bool LinReg::train(const std::size_t epochCount, double learningRate) noexcept
 bool LinReg::isPredictDone() const noexcept
 {
     constexpr double tol = 1e-6;
-    for (std::size_t i{}; i < myTrainSetCount; ++i)
+    for (driver::size_t i{}; i < myTrainSetCount; ++i)
     {
-        if (std::abs(myPredVector[i] - myTrainOutput[i]) > tol)
+        if (driver::abs(myPredVector[i] - myTrainOutput[i]) > tol)
         {
             return false;
         }
@@ -130,8 +130,8 @@ double LinReg::getWeight() const noexcept {return myWeight; }
 //--------------------------------------------------------------------------------//
 void LinReg::shuffleIndex() noexcept
 {
-    static std::mt19937 gen{std::random_device{}()};
-    std::shuffle(myIndex.begin(), myIndex.end(), gen);
+    static driver::mt19937 gen{driver::random_device{}()};
+    driver::shuffle(myIndex.begin(), myIndex.end(), gen);
 }
 } //namespace ml::lin_reg
 
