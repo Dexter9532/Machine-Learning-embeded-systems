@@ -2,21 +2,21 @@
  * @brief Interface for linear regression algorithms.
  */
 
-namespace ml
-{
-namespace linreg 
+namespace ml 
+{ 
+namespace linreg
 {
 class Interface
 {
 public:
     /**
      * @brief Delete the constructor.
-     */
+     */     
     virtual ~Interface() noexcept = default;
 
     /**
      * @brief Function to return the amount of epochs used.
-     * 
+         * 
      * @return Return the value of the variable epochsused.
      */
     virtual int getEpochsUsed() const noexcept = 0;
@@ -44,5 +44,5 @@ public:
      */
     virtual double getWeight() const noexcept = 0;
 };
-} // namespace linreg
-} // namespace ml
+} // Namespace lin_reg
+} // namepsace mml
