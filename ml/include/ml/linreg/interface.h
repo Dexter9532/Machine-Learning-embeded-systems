@@ -2,8 +2,10 @@
  * @brief Interface for linear regression algorithms.
  */
 
-namespace ml::lin_reg {
-
+namespace ml
+{
+namespace linreg 
+{
 class Interface
 {
 public:
@@ -42,4 +44,5 @@ public:
      */
     virtual double getWeight() const noexcept = 0;
 };
-} // Namespace ml::lin_reg
+} // namespace linreg
+} // namespace ml
