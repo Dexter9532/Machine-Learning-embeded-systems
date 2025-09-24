@@ -65,6 +65,18 @@ void shuffle(container::Vector<size_t>& data) noexcept
     }
 }
 
+/**
+ * @brief calculate absolute value of a double
+ * 
+ * @param [in] x input value
+ * 
+ * @return non-negative absolute value of x
+ */
+static inline double dabs(double x) 
+{
+    return (x < 0.0) ? -x : x;
+}
+
 //--------------------------------------------------------------------------------//
 constexpr size_t min(const size_t x, const size_t y) noexcept
 {
@@ -134,42 +146,12 @@ bool LinReg::trainWithNoEpoch(double learningRate) noexcept
     return true;    
 }
 //--------------------------------------------------------------------------------//
-bool LinReg::train(const size_t epochCount, double learningRate) noexcept
-{
-    if ((0U == epochCount) || (0.0 >= learningRate)) { return false;}
-    
-    myEpochCount = epochCount;   
-
-    for (size_t epoch{}; epoch < epochCount; epoch++)
-    {
-        shuffleIndex();
-        for (size_t k{}; k < myTrainSetCount; k++)
-        {
-            // Use random index.
-            const size_t i = myIndex[k];
-
-            // ypred = kx + m.
-            const auto yPred = predict(myTrainInput[i]);
-
-            // e = yref - ypred.
-            const auto e = (myTrainOutput[i] - yPred);
-
-            // m = m + e * LR.
-            myBias = myBias + (e * learningRate);
-
-            // k = k + e * LR * x.
-            myWeight = myWeight + (e * learningRate * myTrainInput[i]); 
-        }
-    }
-    return true;
-}
-//--------------------------------------------------------------------------------//
 bool LinReg::isPredictDone() const noexcept
 {
     constexpr double tol = 1e-6;
     for (size_t i{}; i < myTrainSetCount; ++i)
     {
-        if (driver::abs(myPredVector[i] - myTrainOutput[i]) > tol)
+        if (dabs(myPredVector[i] - myTrainOutput[i]) > tol)
         {
             return false;
         }
