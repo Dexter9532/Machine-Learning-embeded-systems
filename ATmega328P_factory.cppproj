@@ -41,18 +41,6 @@
       </ToolNumber>
       <ToolName xmlns="">Simulator</ToolName>
     </com_atmel_avrdbg_tool_simulator>
-    <AsfFrameworkConfig>
-      <framework-data xmlns="">
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
-  </dependencies>
-</framework-data>
-    </AsfFrameworkConfig>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -268,6 +256,15 @@
     <Compile Include="memory\include\memory\unique_ptr.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="ml\include\ml\linreg\interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ml\include\ml\linreg\linreg.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ml\source\ml\linreg\linreg.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="target\include\target\system.h">
       <SubType>compile</SubType>
     </Compile>
@@ -323,6 +320,13 @@
     <Folder Include="memory\include" />
     <Folder Include="memory\include\memory" />
     <Folder Include="memory\include\memory\impl\" />
+    <Folder Include="ml" />
+    <Folder Include="ml\include" />
+    <Folder Include="ml\include\ml" />
+    <Folder Include="ml\include\ml\linreg" />
+    <Folder Include="ml\source" />
+    <Folder Include="ml\source\ml" />
+    <Folder Include="ml\source\ml\linreg" />
     <Folder Include="target" />
     <Folder Include="target\include" />
     <Folder Include="target\include\target" />
