@@ -53,8 +53,8 @@ void toggleTimerCallback() noexcept { mySys->handleToggleTimerInterrupt(); }
 int main()
 {
     // Initialize the GPIO devices.
-    Gpio led{8U, Gpio::Direction::Output};
-    Gpio button{13U, Gpio::Direction::InputPullup, buttonCallback};
+    Gpio led{9U, Gpio::Direction::Output};
+    Gpio button{8U, Gpio::Direction::InputPullup, buttonCallback};
 
     // Initialize the timers.
     Timer debounceTimer{300U, debounceTimerCallback};
