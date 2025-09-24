@@ -2,7 +2,7 @@
 #include <time.h>   // For time.
 
 #include "ml/linreg/linreg.h"
-#include "container/vector"
+#include "container/vector.h"
 
 namespace ml
 {
@@ -90,7 +90,6 @@ LinReg::LinReg(const container::Vector<double>& trainInput,
                const container::Vector<double>& trainOutput) noexcept
                 :   myTrainInput{trainInput},
                     myTrainOutput{trainOutput},  
-                    mySerial{serial},
                     myTrainSetCount{min(trainInput.size(), trainOutput.size())},
                     myPredVector(myTrainSetCount)
 {

@@ -3,8 +3,8 @@
  */
 #pragma once
 
-#include "ml/linreg/linreg.h"
-#include "container/vector"
+#include "ml/linreg/interface.h"
+#include "container/vector.h"
 
 namespace ml
 {
