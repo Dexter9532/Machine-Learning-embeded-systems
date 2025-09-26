@@ -16,6 +16,7 @@
 #include "driver/atmega328p/timer.h"
 #include "driver/atmega328p/watchdog.h"
 #include "target/system.h"
+#include "ml/linreg/linreg.h"
 
 using namespace driver::atmega328p;
 
@@ -23,6 +24,9 @@ namespace
 {
 /** Pointer to the system implementation. */
 target::System* mySys{nullptr};
+    
+// Obtain a reference to the singleton serial device instance.
+auto& serial{Serial::getInstance()};
 
 /**
  * @brief Callback for the button.
@@ -43,6 +47,40 @@ void debounceTimerCallback() noexcept { mySys->handleDebounceTimerInterrupt(); }
  */
 void toggleTimerCallback() noexcept { mySys->handleToggleTimerInterrupt(); }
 
+constexpr int round(const double number)
+{
+    // Case 1: number = 2.7 => we cast 2.7 + 0.5 to int => 3.2 is converted to 3.
+    // Case 2: number = 2.3 => we cast 2.3 + 0.5 to int => 2.8 is converted to 2.
+    // Case 3: number = -4.7 => we cast -4.7 - 0.5 to int => -5.2 is converted to -5.
+    // Case 4: number = -4.2 => we cast -4.2 - 0.5 to int => -4.7 is converted to -4.
+    return 0.0 <= number ? static_cast<int>(number + 0.5) : static_cast<int>(number - 0.5);
+}
+
+/**
+ * @brief Predict with the given linear regression model.
+ * 
+ * @param[in] linreg Linear regression model to predict with.
+ * @param[in] inputData Input data to predict with.
+ */
+void printPredictions(const ml::linreg::Interface& linReg, const container::Vector<double>& inputData) noexcept
+{
+    // Terminate the function if no input data is provided.
+    if (inputData.empty())
+    {
+        serial.printf("No input data!\n");
+        return;
+    }
+    serial.printf("--------------------------------------------------------------------------------\n");
+    // Perform prediction with each input value, print the result in the terminal.
+    for (const auto& input : inputData)
+    {
+        const auto prediction{linReg.predict(input)};
+        const auto mV{input * 1000.0};
+        serial.printf("Input: %d, predicted output: %d mV\n", round(mV), round(prediction));
+    }
+    serial.printf("Epochs used: %d\n", linReg.getEpochsUsed());
+    serial.printf("--------------------------------------------------------------------------------\n\n");
+}
 } // namespace
 
 /**
@@ -50,8 +88,37 @@ void toggleTimerCallback() noexcept { mySys->handleToggleTimerInterrupt(); }
  * 
  * @return 0 on termination of the program (should never occur).
  */
+
 int main()
 {
+    serial.setEnabled(true);
+    
+    serial.printf("Hello there!");
+        
+    // Learingrate for the training.
+    constexpr double learningRate{0.225};
+
+    // The data we want to train our model with.
+    const container::Vector<double> trainInput{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+    const container::Vector<double> trainOutput{-50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0};
+
+    // The constructor.
+    ml::linreg::LinReg linReg{trainInput, trainOutput};
+    if (!linReg.trainWithNoEpoch(serial, learningRate)) {
+        serial.printf("Training failed!\n");
+        return -1;
+    }
+    serial.printf("Training finished!\n");
+    printPredictions(linReg, trainInput);
+    return 0;
+    // Gällande ADC:
+    // read returnerar ett värde mellan 0 - 1023.
+    // dutyCycle returnerar ett värde mellan 0.0 - 1.0 (den tar ADC-värdet / 1023.0).
+    // inputVoltage tar duty_cycle * spänningen, så den returnerar motsvarande värde mellan 0 - 5 V.
+
+    serial.printf("Hello, Jobo!\n");
+    // Skapa och träna LinReg-modellen här.
+
     // Initialize the GPIO devices.
     Gpio led{9U, Gpio::Direction::Output};
     Gpio button{8U, Gpio::Direction::InputPullup, buttonCallback};
@@ -59,9 +126,6 @@ int main()
     // Initialize the timers.
     Timer debounceTimer{300U, debounceTimerCallback};
     Timer toggleTimer{100U, toggleTimerCallback};
-
-    // Obtain a reference to the singleton serial device instance.
-    auto& serial{Serial::getInstance()};
 
     // Obtain a reference to the singleton watchdog timer instance.
     auto& watchdog{Watchdog::getInstance()};
@@ -73,7 +137,8 @@ int main()
     auto& adc{Adc::getInstance()};
 
     // Initialize the system with the given hardware.
-    target::System system{led, button, debounceTimer, toggleTimer, serial, watchdog, eeprom, adc};
+    // Skicka med din LinReg-modell till system-klassen, där i körs prediktion etc.
+    target::System system{led, button, debounceTimer, toggleTimer, serial, watchdog, eeprom, adc, linReg};
     mySys = &system;
 
     // Run the system perpetually on the target MCU.

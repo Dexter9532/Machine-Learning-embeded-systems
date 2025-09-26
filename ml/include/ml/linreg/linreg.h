@@ -6,6 +6,12 @@
 #include "ml/linreg/interface.h"
 #include "container/vector.h"
 
+namespace driver
+{
+// Forward declaration of serial implementation.
+class SerialInterface;
+}
+
 namespace ml
 {
 namespace linreg
@@ -49,19 +55,12 @@ public:
     bool isPredictDone() const noexcept;
 
     /**
-     * @brief Method to train the module.
-     * 
-     * @param [in] epochCount Indicates how many epochs that will be used.
-     * @param [in] learingRate Learingrate speed, default is 0.01 or 1%.
-     */
-    bool train(const size_t epochCount = 1U, double learningRate = 0.01) noexcept;
-
-    /**
      * @brief Method to train the module without setting epochcount.
      * 
+     * @param[in] serial Serial printer.
      * @param [in] learingRate Learingrate speed, default is 0.01 or 1%.
      */
-    bool trainWithNoEpoch(double learningRate = 0.01) noexcept;
+    bool trainWithNoEpoch(driver::SerialInterface& serial, double learningRate = 0.01) noexcept;
     
     /**
      * @brief Function to return the amount of epochs used.

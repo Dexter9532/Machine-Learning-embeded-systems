@@ -1,6 +1,7 @@
 #include <stdlib.h> // For rand and srand.
 #include <time.h>   // For time.
 
+#include "driver/serial/interface.h"
 #include "ml/linreg/linreg.h"
 #include "container/vector.h"
 
@@ -114,12 +115,13 @@ double LinReg::predict(const double input) const noexcept
     return (myWeight * input + myBias);
 }
 //--------------------------------------------------------------------------------//
-bool LinReg::trainWithNoEpoch(double learningRate) noexcept
+bool LinReg::trainWithNoEpoch(driver::SerialInterface& serial, double learningRate) noexcept
 {
     if ((0.0 >= learningRate)) { return false;}
 
     while (!isPredictDone())
     {
+        serial.printf("Epochs used: %d\n", getEpochsUsed() + 1);
         shuffle(myIndex);
 
         for (size_t k{}; k < myTrainSetCount; k++)
@@ -147,7 +149,7 @@ bool LinReg::trainWithNoEpoch(double learningRate) noexcept
 //--------------------------------------------------------------------------------//
 bool LinReg::isPredictDone() const noexcept
 {
-    constexpr double tol = 1e-6;
+    constexpr double tol = 1e-4;
     for (size_t i{}; i < myTrainSetCount; ++i)
     {
         if (dabs(myPredVector[i] - myTrainOutput[i]) > tol)

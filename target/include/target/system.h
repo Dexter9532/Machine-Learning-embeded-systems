@@ -24,6 +24,15 @@ class TimerInterface;
 class WatchdogInterface;
 } // namespace driver
 
+namespace ml
+{
+namespace linreg
+{
+/** Linear regression interface. */
+class Interface;
+} // namespace linreg
+} // namespace ml
+
 namespace target
 {
 /**
@@ -57,11 +66,13 @@ public:
      * @param[in] watchdog Watchdog timer that resets the program if it becomes unresponsive.
      * @param[in] eeprom EEPROM stream to write the status of the LED to EEPROM.
      * @param[in] adc ADC (currently unused).
+     * @param[in] linReg Linear regression model for temperature prediction.
      */
     explicit System(driver::GpioInterface& led, driver::GpioInterface& button, 
                     driver::TimerInterface& debounceTimer, driver::TimerInterface& toggleTimer,
                     driver::SerialInterface& serial, driver::WatchdogInterface& watchdog, 
-                    driver::EepromInterface& eeprom, driver::AdcInterface& adc) noexcept;
+                    driver::EepromInterface& eeprom, driver::AdcInterface& adc,
+                    ml::linreg::Interface& linReg) noexcept;
 
     /**
      * @brief Delete system.
@@ -139,5 +150,8 @@ private:
 
     /** A/D converter (currently unused). */
     driver::AdcInterface& myAdc;
+
+    /** Linear regression model for temperature prediction. */
+    ml::linreg::Interface& myLinReg;
 };
 } // namespace target

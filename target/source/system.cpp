@@ -10,6 +10,7 @@
 #include "driver/timer/interface.h"
 #include "driver/watchdog/interface.h"
 #include "target/system.h"
+#include "ml/linreg/interface.h"
 
 namespace target
 {
@@ -29,7 +30,8 @@ namespace LedState
 System::System(driver::GpioInterface& led, driver::GpioInterface& button,
                driver::TimerInterface& debounceTimer, driver::TimerInterface& toggleTimer,
                driver::SerialInterface& serial, driver::WatchdogInterface& watchdog,
-               driver::EepromInterface& eeprom, driver::AdcInterface& adc) noexcept
+               driver::EepromInterface& eeprom, driver::AdcInterface& adc,
+               ml::linreg::Interface& linReg) noexcept
     : myLed{led}
     , myButton{button}
     , myDebounceTimer{debounceTimer}
@@ -38,6 +40,7 @@ System::System(driver::GpioInterface& led, driver::GpioInterface& button,
     , myWatchdog{watchdog}
     , myEeprom{eeprom}
     , myAdc{adc}
+    , myLinReg{linReg}
 {
     myButton.enableInterrupt(true);
     mySerial.setEnabled(true);
@@ -99,6 +102,15 @@ void System::run() noexcept
 void System::handleButtonPressed() noexcept
 {
     mySerial.printf("Button pressed!\n");
+
+    // Läs av ADC, prediktera temperaturen och skriv ut den.
+    // Nollställ också 60-sekunderstimern.
+
+    const auto inputVoltage{myAdc.inputVoltage(2U)};
+    const auto prediction{myLinReg.predict(inputVoltage)};
+    
+    mySerial.printf("The temperature is: %d \n", prediction);
+
     myToggleTimer.toggle();
     writeLedStateToEeprom();
 
