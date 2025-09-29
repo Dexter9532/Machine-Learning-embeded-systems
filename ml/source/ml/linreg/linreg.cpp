@@ -123,9 +123,15 @@ bool LinReg::trainWithNoEpoch(double learningRate) noexcept
 {
     if ((0.0 >= learningRate)) { return false;}
 
+    const double lr0     = learningRate; // spara start-lr
+    const double decay   = 0.01;         // hur snabbt lr minskar per epoch
+    const double minLR   = 1e-5;         // golv för lr
+
     while (1)
     {
         shuffle(myIndex);
+
+        double sse = 0.0; // sum of squared errors för denna epoch
 
         for (size_t k{}; k < myTrainSetCount; k++)
         {
@@ -143,9 +149,17 @@ bool LinReg::trainWithNoEpoch(double learningRate) noexcept
             myWeight = myWeight + (e * learningRate * myTrainInput[i]);
 
             myPredVector[i] = predict(myTrainInput[i]);
+
+            // ackumulera sse
+            sse += e * e;
         }
         // Save epochs used.
         myEpochsUsed++;
+
+        // uppdatera lr enligt 1/(1 + decay * t), men klipp mot minLR
+        learningRate = lr0 / (1.0 + decay * static_cast<double>(myEpochsUsed));
+        if (learningRate < minLR) { learningRate = minLR; }
+
         if (isPredictDone()) { break; }
     }
     return true;    
