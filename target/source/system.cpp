@@ -14,6 +14,17 @@
 
 namespace target
 {
+namespace
+{
+constexpr int round(const double number)
+{
+    // Case 1: number = 2.7 => we cast 2.7 + 0.5 to int => 3.2 is converted to 3.
+    // Case 2: number = 2.3 => we cast 2.3 + 0.5 to int => 2.8 is converted to 2.
+    // Case 3: number = -4.7 => we cast -4.7 - 0.5 to int => -5.2 is converted to -5.
+    // Case 4: number = -4.2 => we cast -4.2 - 0.5 to int => -4.7 is converted to -4.
+    return 0.0 <= number ? static_cast<int>(number + 0.5) : static_cast<int>(number - 0.5);
+}
+} // namespace
 /**
  * @brief Structure of LED state parameters.
  */
@@ -28,25 +39,26 @@ namespace LedState
 
 // -----------------------------------------------------------------------------
 System::System(driver::GpioInterface& led, driver::GpioInterface& button,
-               driver::TimerInterface& debounceTimer, driver::TimerInterface& toggleTimer,
+               driver::TimerInterface& debounceTimer, driver::TimerInterface& predictTimer,
                driver::SerialInterface& serial, driver::WatchdogInterface& watchdog,
                driver::EepromInterface& eeprom, driver::AdcInterface& adc,
-               ml::linreg::Interface& linReg) noexcept
+               ml::linreg::Interface& linReg, const uint8_t sensorPin) noexcept
     : myLed{led}
     , myButton{button}
     , myDebounceTimer{debounceTimer}
-    , myToggleTimer{toggleTimer}
+    , myPredictTimer{predictTimer}
     , mySerial{serial}
     , myWatchdog{watchdog}
     , myEeprom{eeprom}
     , myAdc{adc}
     , myLinReg{linReg}
+    , mySensorPin{sensorPin}
 {
     myButton.enableInterrupt(true);
     mySerial.setEnabled(true);
     myWatchdog.setEnabled(true);
-    myEeprom.setEnabled(true);
-    checkLedStateInEeprom();
+    myPredictTimer.start();
+    myAdc.setEnabled(true);
 }
 
 // -----------------------------------------------------------------------------
@@ -55,7 +67,7 @@ System::~System() noexcept
     myLed.write(false);
     myButton.enableInterrupt(false);
     myDebounceTimer.stop();
-    myToggleTimer.stop();
+    myPredictTimer.stop();
     myWatchdog.setEnabled(false);
 }
 
@@ -81,10 +93,10 @@ void System::handleDebounceTimerInterrupt() noexcept
 }
 
 // -----------------------------------------------------------------------------
-void System::handleToggleTimerInterrupt() noexcept 
-{ 
-    mySerial.printf("Toggling the LED!\n");
-    myLed.toggle(); 
+void System::handlepredictTimerInterrupt() noexcept 
+{
+    // Prediktera temperaturen och skriv ut här.
+    // Timern startar om sig själv, så tänk inte på det. 
 }
 
 // -----------------------------------------------------------------------------
@@ -106,42 +118,10 @@ void System::handleButtonPressed() noexcept
     // Läs av ADC, prediktera temperaturen och skriv ut den.
     // Nollställ också 60-sekunderstimern.
 
-    const auto inputVoltage{myAdc.inputVoltage(2U)};
+    const auto inputVoltage{myAdc.inputVoltage(mySensorPin)};
     const auto prediction{myLinReg.predict(inputVoltage)};
     
-    mySerial.printf("The temperature is: %d \n", prediction);
-
-    myToggleTimer.toggle();
-    writeLedStateToEeprom();
-
-    if (myToggleTimer.isEnabled()) { mySerial.printf("Toggle timer enabled!\n"); }
-    else
-    {
-        mySerial.printf("Toggle timer disabled!\n");
-        myLed.write(false);
-    }
-}
-
-// -----------------------------------------------------------------------------
-void System::checkLedStateInEeprom() noexcept
-{
-    if (readLedStateFromEeprom())
-    {
-        myToggleTimer.start();
-        mySerial.printf("Toggle timer enabled!\n");
-    }
-}
-
-// -----------------------------------------------------------------------------
-void System::writeLedStateToEeprom() noexcept
-{ 
-    myEeprom.write(LedState::address, myToggleTimer.isEnabled());
-}
-
-// -----------------------------------------------------------------------------
-bool System::readLedStateFromEeprom() const noexcept
-{
-    uint8_t state{};
-    return myEeprom.read(LedState::address, state) ? LedState::enabled == state : false;
+    mySerial.printf("The temperature is: %d \n", round(prediction));
+    myPredictTimer.restart();
 }
 } // namespace target

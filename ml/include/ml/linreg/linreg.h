@@ -31,7 +31,8 @@ public:
      * @param [in] tainOutput Reference to a readble vector, (data that is going to be traded).
      */
     explicit LinReg(const container::Vector<double>& trainInput,
-                    const container::Vector<double>& trainOutput) noexcept;
+                    const container::Vector<double>& trainOutput,
+                    driver::SerialInterface& serial) noexcept;
 
     /**
      * @brief Delete the constructor as default.
@@ -57,10 +58,9 @@ public:
     /**
      * @brief Method to train the module without setting epochcount.
      * 
-     * @param[in] serial Serial printer.
      * @param [in] learingRate Learingrate speed, default is 0.01 or 1%.
      */
-    bool trainWithNoEpoch(driver::SerialInterface& serial, double learningRate = 0.01) noexcept;
+    bool trainWithNoEpoch(double learningRate = 0.01) noexcept;
     
     /**
      * @brief Function to return the amount of epochs used.
@@ -102,6 +102,7 @@ private:
     container::Vector<double> myPredVector;                   // Last predict.
     size_t myEpochCount{0};                        // The specified amount of epochs that the module should use.   
     container::Vector<size_t> myIndex;                   // Vector that holds the amount of indexes in traingvector to shuffle.
+    driver::SerialInterface& mySerial;
 
 };
 } // namespace linreg

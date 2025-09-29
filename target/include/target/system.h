@@ -61,7 +61,7 @@ public:
      * @param[in] led The LED to toggle.
      * @param[in] button Button used to toggle the toggle timer.
      * @param[in] debounceTimer Timer used to mitigate effects of contact bounces.
-     * @param[in] toggleTimer Timer used to toggle the LED.
+     * @param[in] predictTimer Timer used to toggle the LED.
      * @param[in] serial Serial device used to print status messages.
      * @param[in] watchdog Watchdog timer that resets the program if it becomes unresponsive.
      * @param[in] eeprom EEPROM stream to write the status of the LED to EEPROM.
@@ -69,10 +69,10 @@ public:
      * @param[in] linReg Linear regression model for temperature prediction.
      */
     explicit System(driver::GpioInterface& led, driver::GpioInterface& button, 
-                    driver::TimerInterface& debounceTimer, driver::TimerInterface& toggleTimer,
+                    driver::TimerInterface& debounceTimer, driver::TimerInterface& predictTimer,
                     driver::SerialInterface& serial, driver::WatchdogInterface& watchdog, 
                     driver::EepromInterface& eeprom, driver::AdcInterface& adc,
-                    ml::linreg::Interface& linReg) noexcept;
+                    ml::linreg::Interface& linReg, const uint8_t sensorPin) noexcept;
 
     /**
      * @brief Delete system.
@@ -108,7 +108,7 @@ public:
      * 
      *        Toggle the LED every 100 ms when the associated timer is enabled.
      */
-    void handleToggleTimerInterrupt() noexcept;
+    void handlepredictTimerInterrupt() noexcept;
 
     /**
      * @brief Run the system as long as voltage is supplied.                                                               
@@ -137,7 +137,7 @@ private:
     driver::TimerInterface& myDebounceTimer;
 
     /** Timer used to toggle the LED. */
-    driver::TimerInterface& myToggleTimer;
+    driver::TimerInterface& myPredictTimer;
 
     /** Serial device used to print status messages. */
     driver::SerialInterface& mySerial;
@@ -153,5 +153,7 @@ private:
 
     /** Linear regression model for temperature prediction. */
     ml::linreg::Interface& myLinReg;
+
+    const uint8_t mySensorPin;
 };
 } // namespace target

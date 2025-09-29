@@ -45,7 +45,7 @@ void debounceTimerCallback() noexcept { mySys->handleDebounceTimerInterrupt(); }
  * 
  *        This callback is invoked whenever the toggle timer elapses.
  */
-void toggleTimerCallback() noexcept { mySys->handleToggleTimerInterrupt(); }
+void predictTimerCallback() noexcept { mySys->handlepredictTimerInterrupt(); }
 
 constexpr int round(const double number)
 {
@@ -76,7 +76,7 @@ void printPredictions(const ml::linreg::Interface& linReg, const container::Vect
     {
         const auto prediction{linReg.predict(input)};
         const auto mV{input * 1000.0};
-        serial.printf("Input: %d, predicted output: %d mV\n", round(mV), round(prediction));
+        serial.printf("Input: %d mV, predicted output: %d Celsius\n", round(mV), round(prediction));
     }
     serial.printf("Epochs used: %d\n", linReg.getEpochsUsed());
     serial.printf("--------------------------------------------------------------------------------\n\n");
@@ -97,20 +97,20 @@ int main()
         
     // Learingrate for the training.
     constexpr double learningRate{0.225};
-
+    constexpr uint8_t sensorPin{16U};
     // The data we want to train our model with.
     const container::Vector<double> trainInput{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
     const container::Vector<double> trainOutput{-50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0};
 
     // The constructor.
-    ml::linreg::LinReg linReg{trainInput, trainOutput};
-    if (!linReg.trainWithNoEpoch(serial, learningRate)) {
+    ml::linreg::LinReg linReg{trainInput, trainOutput, serial};
+
+    if (!linReg.trainWithNoEpoch(learningRate)) {
         serial.printf("Training failed!\n");
         return -1;
     }
     serial.printf("Training finished!\n");
     printPredictions(linReg, trainInput);
-    return 0;
     // Gällande ADC:
     // read returnerar ett värde mellan 0 - 1023.
     // dutyCycle returnerar ett värde mellan 0.0 - 1.0 (den tar ADC-värdet / 1023.0).
@@ -125,7 +125,7 @@ int main()
 
     // Initialize the timers.
     Timer debounceTimer{300U, debounceTimerCallback};
-    Timer toggleTimer{100U, toggleTimerCallback};
+    Timer predictTimer{60000UL, predictTimerCallback};
 
     // Obtain a reference to the singleton watchdog timer instance.
     auto& watchdog{Watchdog::getInstance()};
@@ -138,7 +138,7 @@ int main()
 
     // Initialize the system with the given hardware.
     // Skicka med din LinReg-modell till system-klassen, där i körs prediktion etc.
-    target::System system{led, button, debounceTimer, toggleTimer, serial, watchdog, eeprom, adc, linReg};
+    target::System system{led, button, debounceTimer, predictTimer, serial, watchdog, eeprom, adc, linReg, sensorPin};
     mySys = &system;
 
     // Run the system perpetually on the target MCU.

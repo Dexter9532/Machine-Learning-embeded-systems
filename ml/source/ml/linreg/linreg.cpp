@@ -3,6 +3,7 @@
 
 #include "driver/serial/interface.h"
 #include "ml/linreg/linreg.h"
+#include "driver/serial/interface.h"
 #include "container/vector.h"
 
 namespace ml
@@ -88,12 +89,15 @@ constexpr size_t min(const size_t x, const size_t y) noexcept
 
 //--------------------------------------------------------------------------------//
 LinReg::LinReg(const container::Vector<double>& trainInput,
-               const container::Vector<double>& trainOutput) noexcept
+               const container::Vector<double>& trainOutput,
+               driver::SerialInterface& serial) noexcept
                 :   myTrainInput{trainInput},
                     myTrainOutput{trainOutput},  
                     myTrainSetCount{min(trainInput.size(), trainOutput.size())},
-                    myPredVector(myTrainSetCount)
+                    myPredVector(myTrainSetCount),
+                    mySerial{serial}
 {
+    mySerial.setEnabled(true);
     // Random generator and uniform.
     initRandom();
 
@@ -115,13 +119,12 @@ double LinReg::predict(const double input) const noexcept
     return (myWeight * input + myBias);
 }
 //--------------------------------------------------------------------------------//
-bool LinReg::trainWithNoEpoch(driver::SerialInterface& serial, double learningRate) noexcept
+bool LinReg::trainWithNoEpoch(double learningRate) noexcept
 {
     if ((0.0 >= learningRate)) { return false;}
 
-    while (!isPredictDone())
+    while (1)
     {
-        serial.printf("Epochs used: %d\n", getEpochsUsed() + 1);
         shuffle(myIndex);
 
         for (size_t k{}; k < myTrainSetCount; k++)
@@ -137,12 +140,13 @@ bool LinReg::trainWithNoEpoch(driver::SerialInterface& serial, double learningRa
             myBias = myBias + (e * learningRate);
 
             // k = k + e * LR * x.
-            myWeight = myWeight + (e * learningRate * myTrainInput[i]); 
-            
+            myWeight = myWeight + (e * learningRate * myTrainInput[i]);
+
             myPredVector[i] = predict(myTrainInput[i]);
         }
         // Save epochs used.
         myEpochsUsed++;
+        if (isPredictDone()) { break; }
     }
     return true;    
 }
